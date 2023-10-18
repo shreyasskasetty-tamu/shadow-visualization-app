@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import { Container, Typography, TextField, Button, Box, Select, MenuItem } from '@mui/material';
 import axios from 'axios';
 import { BallTriangle } from 'react-loader-spinner';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 const colorMaps = ['viridis', 'plasma', 'inferno', 'magma', 'cividis', 'cool', 'hot', 'coolwarm'];
 
@@ -10,6 +16,16 @@ const LandingPage = () => {
   const [image_url, setImageUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedColorMap, setSelectedColorMap] = useState('viridis'); // Default color map
+
+  const [open, setOpen] = React.useState(false);
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setOpen(false);
+  };
 
   const handleDocumentIdChange = (event) => {
     setDocumentId(event.target.value);
@@ -23,7 +39,7 @@ const LandingPage = () => {
     setIsLoading(true);
     try {
       // Send a POST request with the documentId and selectedColorMap in the request body
-      const response = await axios.post(` https://ylj0v7tfp4.execute-api.us-east-1.amazonaws.com/v1/visualize-shadow`, {
+      const response = await axios.post(`https://ylj0v7tfp4.execute-api.us-east-1.amazonaws.com/v1/visualize-shadow`, {
         document_id: documentId,
         colormap: selectedColorMap,
       },{
@@ -33,6 +49,8 @@ const LandingPage = () => {
       const image_url = response.data; // Assuming your API response contains the image URL
       setImageUrl(image_url);
     } catch (error) {
+      setOpen(true);
+      setImageUrl("");
       console.error('Error fetching data:', error);
     } finally {
       setIsLoading(false);
@@ -91,6 +109,11 @@ const LandingPage = () => {
         >
           Visualize
         </Button>
+        <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
+            The Visualization API failed. Please Retry!
+          </Alert>
+      </Snackbar>
       </Box>
     </Container>
   );
